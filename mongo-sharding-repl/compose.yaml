@@ -1,0 +1,322 @@
+name: mongo-sharding-repl
+services:
+
+  # Mongo shards (2 shards x 3 replicas)
+
+  mongo_dbrs_1:
+    container_name: mongo_dbrs_1
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_dbrs_1_data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "mongo_dbrs",
+        "--bind_ip_all",
+        "--port",
+        "27011"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.3.1
+    ports:
+      - "27011:27011"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  mongo_dbrs_2:
+    container_name: mongo_dbrs_2
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_dbrs_2_data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "mongo_dbrs",
+        "--bind_ip_all",
+        "--port",
+        "27012"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.3.2
+    ports:
+      - "27012:27012"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  mongo_dbrs_3:
+    container_name: mongo_dbrs_3
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_dbrs_3_data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "mongo_dbrs",
+        "--bind_ip_all",
+        "--port",
+        "27013"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.3.3
+    ports:
+      - "27013:27013"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  #Shard 2
+
+  mongo_dbrs2_1:
+    container_name: mongo_dbrs2_1
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_dbrs2_1_data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "mongo_dbrs2",
+        "--bind_ip_all",
+        "--port",
+        "27021"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.4.1
+    ports:
+      - "27021:27021"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  mongo_dbrs2_2:
+    container_name: mongo_dbrs2_2
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_dbrs2_2_data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "mongo_dbrs2",
+        "--bind_ip_all",
+        "--port",
+        "27022"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.4.2
+    ports:
+      - "27022:27022"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  mongo_dbrs2_3:
+    container_name: mongo_dbrs2_3
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_dbrs2_3_data:/data/db
+    command:
+      [
+        "--shardsvr",
+        "--replSet",
+        "mongo_dbrs2",
+        "--bind_ip_all",
+        "--port",
+        "27023"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.4.3
+    ports:
+      - "27023:27023"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+
+  # Mongo config servers (3 servers)
+
+  mongo_cfgrs_1:
+    container_name: mongo_cfgrs_1
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_cfgrs_1_data:/data/configdb
+    command:
+      [
+        "mongod",
+        "--configsvr",
+        "--replSet",
+        "mongo_cfgrs",
+        "--bind_ip_all",
+        "--port",
+        "27091"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.5.1
+    ports:
+      - "27091:27091"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+    depends_on:
+      - mongo_dbrs_1
+      - mongo_dbrs_2
+      - mongo_dbrs_3
+      - mongo_dbrs2_1
+      - mongo_dbrs2_2
+      - mongo_dbrs2_3
+
+  mongo_cfgrs_2:
+    container_name: mongo_cfgrs_2
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_cfgrs_2_data:/data/configdb
+    command:
+      [
+        "--configsvr",
+        "--replSet",
+        "mongo_cfgrs",
+        "--bind_ip_all",
+        "--port",
+        "27092"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.5.2
+    ports:
+      - "27092:27092"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+    depends_on:
+      - mongo_dbrs_1
+      - mongo_dbrs_2
+      - mongo_dbrs_3
+      - mongo_dbrs2_1
+      - mongo_dbrs2_2
+      - mongo_dbrs2_3
+
+  mongo_cfgrs_3:
+    container_name: mongo_cfgrs_3
+    image: mongo:7.0.12
+    restart: always
+    volumes:
+      - mongo_cfgrs_3_data:/data/configdb
+    command:
+      [
+        "--configsvr",
+        "--replSet",
+        "mongo_cfgrs",
+        "--bind_ip_all",
+        "--port",
+        "27093"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.5.3
+    ports:
+      - "27093:27093"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+    depends_on:
+      - mongo_dbrs_1
+      - mongo_dbrs_2
+      - mongo_dbrs_3
+      - mongo_dbrs2_1
+      - mongo_dbrs2_2
+      - mongo_dbrs2_3
+
+  # Mongo router (mongos)
+
+  mongo_router:
+    container_name: mongo_router
+    image: mongo:7.0.12
+    restart: always
+    command:
+      [
+        "mongos",
+        "--port",
+        "27080",
+        "--bind_ip_all",
+        "--configdb",
+        "mongo_cfgrs/mongo_cfgrs_1:27091,mongo_cfgrs_2:27091,mongo_cfgrs_3:27091"
+      ]
+    networks:
+      app-network:
+        ipv4_address: 192.168.6.1
+    ports:
+      - "27080:27080"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      start_period: 10s
+    depends_on:
+      - mongo_cfgrs_1
+      - mongo_cfgrs_2
+      - mongo_cfgrs_3
+
+  # API pymongo
+
+  pymongo_api:
+    container_name: pymongo_api
+    build:
+      context: api_app
+      dockerfile: Dockerfile
+    #image: kazhem/pymongo_api:1.0.0
+    networks:
+      app-network:
+        ipv4_address: 192.168.7.1
+    ports:
+      - 8080:8080
+    environment:
+      MONGODB_URL: "mongodb://mongo_router:27080"
+      MONGODB_DATABASE_NAME: "somedb"
+    depends_on:
+      - mongo_router
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.0.0/16
+
+volumes:
+  mongo_dbrs_1_data:
+  mongo_dbrs_2_data:
+  mongo_dbrs_3_data:
+  mongo_dbrs2_1_data:
+  mongo_dbrs2_2_data:
+  mongo_dbrs2_3_data:
+  mongo_cfgrs_1_data:
+  mongo_cfgrs_2_data:
+  mongo_cfgrs_3_data:
